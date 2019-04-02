@@ -1,2 +1,2 @@
 # Fondid
-Eesti II samba fondide tootlikkuse analyys
+Eesti II samba fondide tootlikkuse ülevaade
