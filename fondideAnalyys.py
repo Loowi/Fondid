@@ -40,7 +40,7 @@ fondi_maht = fondAasta.last()
 aasta_maht = fondi_maht.groupby(fondi_maht['Kuupäev'].dt.year)['Maht'].agg(['sum']).reset_index()
 aasta_maht = aasta_maht.rename(columns={'sum': 'Kogumaht'})
 
-# Arvuta koikide fondide kasum aastat loikes
+# Arvuta koikide fondide kasum aastate loikes
 zen = fondid.groupby(fondid['Kuupäev'].dt.year)['Kasum'].agg(['sum']).reset_index()
 zen = zen.rename(columns={'sum': 'Kogukasum'})
 
