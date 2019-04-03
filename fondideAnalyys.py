@@ -40,7 +40,7 @@ fondi_maht = fondAasta.last()
 aasta_maht = fondi_maht.groupby(fondi_maht['Kuupäev'].dt.year)['Maht'].agg(['sum']).reset_index()
 aasta_maht = aasta_maht.rename(columns={'sum': 'Kogumaht'})
 
-# Arvuta koikide fondide kasum aastate loikes
+# Arvuta koikide fondide kasum aastat loikes
 zen = fondid.groupby(fondid['Kuupäev'].dt.year)['Kasum'].agg(['sum']).reset_index()
 zen = zen.rename(columns={'sum': 'Kogukasum'})
 
@@ -55,25 +55,31 @@ zen = pd.merge(zen, thi[['aasta','thi']], left_on='Kuupäev', right_on='aasta')
 zen = pd.merge(zen, gdax, left_on='Kuupäev', right_on=gdax['Date'].dt.year)
 zen = zen[['aasta','Aasta keskmine maht','EE aasta tootlus','thi','DAX aasta tootlus']]
 
-koond = pd.DataFrame({'Aasta':[], 'aasta_EE':[], 'aasta_DAX':[], 'cagr_EE':[], 'cagr_DAX':[], 'cum_thi':[], 'keskmine_EE':[], 'kaalutud_keskmine_EE':[]})
+koond = pd.DataFrame({'Aasta':[], 'aasta_EE':[], 'aasta_DAX':[], 'cagr_EE':[], 
+                      'cagr_DAX':[], 'cum_thi':[], 'keskmine_EE':[], 'kaalutud_keskmine_EE':[]})
 # Arvuta tootlused
 for i in range(0, len(zen)):   
     zenTykk = zen.tail(len(zen)-i)
     aasta = zen.iloc[i]['aasta'] 
-    b1 = zen.iloc[i]['EE aasta tootlus'] 
-    
+    b1 = zen.iloc[i]['EE aasta tootlus']     
     b2 = zen.iloc[i]['DAX aasta tootlus']     
-    a1 = (1 + zenTykk['EE aasta tootlus']).values.cumprod() - 1
     
-    b3 = ((((a1[-1]+1))) ** (1/(len(zen)-i))) - 1
-    a2 = (1 + zenTykk['DAX aasta tootlus']).values.cumprod() - 1
+    sumTootlus = lambda a : (1 + a).values.cumprod() - 1
+    cagr = lambda a, b : (a[-1]+1) ** (1/(len(b)-i)) - 1
+        
+    a1 = sumTootlus(zenTykk['EE aasta tootlus'])
+    b3 = cagr(a1, zen)
     
-    b4 = ((((a2[-1]+1))) ** (1/(len(zen)-i))) - 1
-    a3 = (1 + zenTykk['thi']).values.cumprod() - 1    
-    
-    b5 = ((((a3[-1]+1))) ** (1/(len(zen)-i))) - 1
+    a2 = sumTootlus(zenTykk['DAX aasta tootlus'])
+    b4 = cagr(a2, zen)
+
+    a3 = sumTootlus(zenTykk['thi'])      
+    b5 = cagr(a3, zen)
+
     b6 = zenTykk['EE aasta tootlus'].mean()   
     b7 = np.average(zenTykk['EE aasta tootlus'], weights=zenTykk['Aasta keskmine maht'])    
     
     # Salvesta tulemused       
     koond.loc[i] = [aasta, b1, b2, b3, b4, b5, b6, b7]
+
+koond.to_excel("fondide tulemused.xlsx", index=False)
